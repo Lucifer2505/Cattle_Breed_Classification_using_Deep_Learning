@@ -1,0 +1,6 @@
+# Too large for GitHub (100 MB limit); host it elsewhere, see README
+models/cattle_breeds.onnx.data
+models/cattle_breeds.onnx.data.check
+node_modules/
+_site/
+.DS_Store

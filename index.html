@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" class="cbi-root">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#3f6b3c">
+  <meta name="description" content="Identify Indian cattle breeds from a photo. Runs on your device; photos are not uploaded.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
+  <title>Cattle Breed Identifier</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="cbi-body">
+<div class="cbi-app">
+  <a class="cbi-skip" href="#classifier" data-i18n="skip">Skip to the classifier</a>
+
+  <header class="cbi-header">
+    <div class="cbi-header__inner">
+      <span class="cbi-brand" data-i18n="appName">Cattle Breed Identifier</span>
+      <span id="netBadge" class="cbi-badge" hidden data-i18n="offline">Offline</span>
+      <button type="button" id="themeBtn" class="cbi-theme-toggle" aria-label="Switch to the forest theme" title="Switch to the forest theme" aria-pressed="false">
+        <svg data-theme-icon="forest" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/></svg>
+        <svg data-theme-icon="light" viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>
+      </button>
+      <button type="button" id="langBtn" class="cbi-btn-quiet" lang="hi" aria-label="Switch to Hindi">हिन्दी</button>
+    </div>
+  </header>
+
+  <main class="cbi-main">
+    <section class="cbi-intro">
+      <h1 data-i18n="introTitle">Identify an Indian cattle breed from a photo</h1>
+      <p id="introBody"></p>
+      <p class="cbi-privacy" data-i18n="privacy">Images are processed on this device and are not uploaded.</p>
+    </section>
+
+    <div id="modelStatus" class="cbi-model" hidden>
+      <p id="modelStatusText"></p>
+      <progress id="modelProgress" class="cbi-model__progress" max="100" hidden aria-label="Model download progress"></progress>
+      <div class="cbi-model__actions">
+        <button type="button" id="modelDownload" class="cbi-btn cbi-btn--primary" hidden data-i18n="mDownload">Download model</button>
+        <button type="button" id="modelRetry" class="cbi-btn" hidden data-i18n="retry">Try again</button>
+        <button type="button" id="modelCancel" class="cbi-btn" hidden data-i18n="mCancel">Cancel</button>
+        <button type="button" id="modelRemove" class="cbi-btn-quiet" hidden data-i18n="mRemove">Remove model from this device</button>
+      </div>
+      <p id="modelNote" class="cbi-hint" hidden></p>
+    </div>
+
+    <section id="classifier" class="cbi-workspace" aria-label="Classifier">
+      <div class="cbi-panel">
+        <div class="cbi-tabs" role="tablist">
+          <button type="button" role="tab" id="tabUpload" aria-selected="true" aria-controls="paneUpload" data-i18n="tabUpload">Upload</button>
+          <button type="button" role="tab" id="tabCamera" aria-selected="false" aria-controls="paneCamera" tabindex="-1" data-i18n="tabCamera">Camera</button>
+        </div>
+
+        <div id="paneUpload" role="tabpanel" aria-labelledby="tabUpload">
+          <div id="dropzone" class="cbi-dropzone">
+            <p class="cbi-dropzone__title" data-i18n="dropTitle">Drop a photo here</p>
+            <p class="cbi-dropzone__or" data-i18n="dropOr">or</p>
+            <label class="cbi-btn cbi-btn--primary" for="fileInput" data-i18n="choose">Choose a photo</label>
+            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" class="cbi-sr-only">
+            <p class="cbi-hint" id="dropHint"></p>
+          </div>
+        </div>
+
+        <div id="paneCamera" role="tabpanel" aria-labelledby="tabCamera" hidden>
+          <div id="cameraBox" class="cbi-camera">
+            <video id="video" playsinline muted></video>
+            <p id="cameraMsg" class="cbi-camera__msg"></p>
+          </div>
+          <div class="cbi-row">
+            <button type="button" id="cameraStart" class="cbi-btn cbi-btn--primary" data-i18n="cameraStart">Start camera</button>
+            <button type="button" id="capture" class="cbi-btn" data-i18n="capture" hidden>Take photo</button>
+            <button type="button" id="cameraStop" class="cbi-btn-quiet" data-i18n="cameraStop" hidden>Stop camera</button>
+          </div>
+        </div>
+
+        <div id="preview" class="cbi-preview" hidden>
+          <img id="previewImg" alt="">
+          <button type="button" id="removeBtn" class="cbi-btn-quiet" data-i18n="remove">Remove photo</button>
+        </div>
+
+        <p id="inputError" class="cbi-notice cbi-notice--error" role="alert" hidden></p>
+        <button type="button" id="classifyBtn" class="cbi-btn cbi-btn--primary cbi-btn--wide" disabled data-i18n="classify">Identify breed</button>
+      </div>
+
+      <div class="cbi-panel">
+        <h2 data-i18n="resultTitle">Result</h2>
+        <div id="resultEmpty" class="cbi-empty">
+          <p class="cbi-empty__title" data-i18n="resultEmptyTitle">No photo yet</p>
+          <p data-i18n="resultEmptyBody">Add a photo and choose Identify breed. The best matches will appear here.</p>
+        </div>
+
+        <div id="resultBody" hidden>
+          <!-- top score strictly below the minimum: no breed name anywhere, only the fixed message -->
+          <div id="resultError" class="cbi-alert cbi-alert--error" hidden>
+            <p id="resultErrorText" class="cbi-alert__text"></p>
+          </div>
+          <!-- top score at or above the minimum -->
+          <div id="resultSuccess" class="cbi-alert cbi-alert--success" hidden>
+            <p class="cbi-label" data-i18n="bestMatch">Best match</p>
+            <p class="cbi-best"><strong id="bestLabel"></strong></p>
+            <div class="cbi-meter-row"><span data-i18n="confidence">Confidence</span><strong id="bestPct"></strong></div>
+            <div id="bestMeter" class="cbi-meter" role="presentation"><div id="bestBar"></div></div>
+            <p id="cautionMsg" class="cbi-alert__note" hidden></p>
+            <h3 class="cbi-label" data-i18n="otherMatches">Other close matches</h3>
+            <ol id="others" class="cbi-others"></ol>
+          </div>
+          <p id="resultHint" class="cbi-hint" hidden></p>
+          <p id="debugInfo" class="cbi-hint" hidden></p>
+          <button type="button" id="againBtn" class="cbi-btn" data-i18n="another">Try another photo</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="cbi-footer"><p data-i18n="footer">Runs in your browser. No account, no server.</p></footer>
+
+  <button type="button" id="feedbackFab" class="cbi-fab" data-i18n="fbOpen">Feedback</button>
+
+  <dialog id="feedbackDialog" class="cbi-dialog" aria-labelledby="fbTitle">
+    <form data-fb="form" class="cbi-dialog__form" novalidate>
+      <div class="cbi-dialog__head">
+        <h2 id="fbTitle" data-i18n="fbTitle">Send feedback</h2>
+        <button type="button" data-fb="close" class="cbi-icon-btn" aria-label="Close" data-i18n-aria="fbClose">✕</button>
+      </div>
+      <p class="cbi-hint" data-i18n="fbIntro">Tell us what worked, what did not, or what you would like to see.</p>
+      <label class="cbi-field" for="fbType"><span data-i18n="fbType">Topic</span>
+        <select id="fbType" data-fb="type" class="cbi-input">
+          <option value="Wrong breed" data-i18n="fbTypeWrong">Wrong breed result</option>
+          <option value="Bug" data-i18n="fbTypeBug">Something is broken</option>
+          <option value="Suggestion" data-i18n="fbTypeIdea">Idea or request</option>
+          <option value="Other" data-i18n="fbTypeOther">Other</option>
+        </select>
+      </label>
+      <label class="cbi-field" for="fbMessage"><span data-i18n="fbMessage">Your message</span>
+        <textarea id="fbMessage" data-fb="message" class="cbi-input" rows="5" maxlength="1000" required></textarea>
+        <span data-fb="counter" class="cbi-hint"></span>
+      </label>
+      <label class="cbi-field" for="fbEmail"><span data-i18n="fbEmail">Email (optional, only if you want a reply)</span>
+        <input id="fbEmail" data-fb="email" class="cbi-input" type="email" autocomplete="email" inputmode="email">
+      </label>
+      <label class="cbi-trap" aria-hidden="true">Leave empty <input type="checkbox" data-fb="botcheck" tabindex="-1" autocomplete="off"></label>
+      <p class="cbi-hint" data-i18n="fbDisclosure">Sent with your message: screen size, device type and browser details. No photos or results are sent.</p>
+      <p data-fb="status" class="cbi-notice cbi-notice--error" role="alert" hidden></p>
+      <div class="cbi-dialog__actions">
+        <button type="button" data-fb="close" class="cbi-btn" data-i18n="fbCancel">Cancel</button>
+        <button type="submit" data-fb="send" class="cbi-btn cbi-btn--primary" data-i18n="fbSend">Send</button>
+      </div>
+    </form>
+    <div data-fb="done" class="cbi-dialog__form" hidden>
+      <h2 data-i18n="fbThanks">Thank you</h2>
+      <p data-i18n="fbThanksBody">Your feedback was sent.</p>
+      <button type="button" data-fb="close" class="cbi-btn cbi-btn--primary" data-i18n="fbDone">Close</button>
+    </div>
+  </dialog>
+
+  <p id="srStatus" class="cbi-sr-only" role="status" aria-live="polite"></p>
+</div>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
