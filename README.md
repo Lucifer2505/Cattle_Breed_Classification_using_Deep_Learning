@@ -83,3 +83,8 @@ The Web3Forms access key in `js/feedback-config.js` is sent to browsers and is p
 The current weights were loaded by ONNX Runtime Web in WASM and produced 50 finite logits for a synthetic image. This verifies model loading and execution, not classification accuracy. Test with known cattle photos before relying on predictions. WebGPU support for this graph, real-photo label agreement, real-device speed and memory use, other browsers, and a real Web3Forms submission have not been verified. See `CHECKLIST.md` for the remaining checks.
 
 The model always chooses among its 50 labels, so non-cattle photos may still receive a breed prediction. Browser image resizing and EXIF orientation can also differ from the training pipeline.
+
+## **Live Demo**
+[https://lucifer2505.github.io/Cattle_Breed_Classification_using_Deep_Learning/] 
+                        OR 
+[https://tinyurl.com/CattleBreedClassifier]
